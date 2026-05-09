@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -52,8 +53,7 @@
     <p style="margin:8px 0 0; opacity: 0.8; font-size: 13px; letter-spacing: 1px;">TRADUCTION FRANÇAISE</p>
 </header>
 
-<div class="container" id="surahList">
-    </div>
+<div class="container" id="surahList"></div>
 
 <script>
     const quranList = [
@@ -119,7 +119,7 @@
         { id: 60, name: "Al-Mumtahanah", arabic: "الممتحنة", verses: 13, type: "médinoise" },
         { id: 61, name: "As-Saff", arabic: "الصف", verses: 14, type: "médinoise" },
         { id: 62, name: "Al-Jumu'ah", arabic: "الجمعة", verses: 11, type: "médinoise" },
-        { id: 63, name: "Al-Munafiqun", arabic: "المنافقon", verses: 11, type: "médinoise" },
+        { id: 63, name: "Al-Munafiqun", arabic: "المنافقون", verses: 11, type: "médinoise" },
         { id: 64, name: "At-Taghabun", arabic: "التغابن", verses: 18, type: "médinoise" },
         { id: 65, name: "At-Talaq", arabic: "الطلاق", verses: 12, type: "médinoise" },
         { id: 66, name: "At-Tahrim", arabic: "التحريم", verses: 12, type: "médinoise" },
@@ -139,63 +139,4 @@
         { id: 80, name: "'Abasa", arabic: "عبس", verses: 42, type: "mecquoise" },
         { id: 81, name: "At-Takwir", arabic: "التكوير", verses: 29, type: "mecquoise" },
         { id: 82, name: "Al-Infitar", arabic: "الإنفطار", verses: 19, type: "mecquoise" },
-        { id: 83, name: "Al-Mutaffifin", arabic: "المطففين", verses: 36, type: "mecquoise" },
-        { id: 84, name: "Al-Inshiqaq", arabic: "الإنشقاق", verses: 25, type: "mecquoise" },
-        { id: 85, name: "Al-Buruj", arabic: "البروج", verses: 22, type: "mecquoise" },
-        { id: 86, name: "At-Tariq", arabic: "الطارق", verses: 17, type: "mecquoise" },
-        { id: 87, name: "Al-A'la", arabic: "الأعلى", verses: 19, type: "mecquoise" },
-        { id: 88, name: "Al-Ghashiyah", arabic: "الغاشية", verses: 26, type: "mecquoise" },
-        { id: 89, name: "Al-Fajr", arabic: "الفجر", verses: 30, type: "mecquoise" },
-        { id: 90, name: "Al-Balad", arabic: "البلد", verses: 20, type: "mecquoise" },
-        { id: 91, name: "Ash-Shams", arabic: "الشams", verses: 15, type: "mecquoise" },
-        { id: 92, name: "Al-Layl", arabic: "الليل", verses: 21, type: "mecquoise" },
-        { id: 93, name: "Ad-Duha", arabic: "الضحى", verses: 11, type: "mecquoise" },
-        { id: 94, name: "Ash-Sharh", arabic: "الشرح", verses: 8, type: "mecquoise" },
-        { id: 95, name: "At-Tin", arabic: "التين", verses: 8, type: "mecquoise" },
-        { id: 96, name: "Al-'Alaq", arabic: "العلق", verses: 19, type: "mecquoise" },
-        { id: 97, name: "Al-Qadr", arabic: "القدر", verses: 5, type: "mecquoise" },
-        { id: 98, name: "Al-Bayyinah", arabic: "البينة", verses: 8, type: "médinoise" },
-        { id: 99, name: "Az-Zalzalah", arabic: "الزلزلة", verses: 8, type: "médinoise" },
-        { id: 100, name: "Al-'Adiyat", arabic: "العاديات", verses: 11, type: "mecquoise" },
-        { id: 101, name: "Al-Qari'ah", arabic: "القارعة", verses: 11, type: "mecquoise" },
-        { id: 102, name: "At-Takathur", arabic: "التكاثر", verses: 8, type: "mecquoise" },
-        { id: 103, name: "Al-'Asr", arabic: "العصر", verses: 3, type: "mecquoise" },
-        { id: 104, name: "Al-Humazah", arabic: "الهمزة", verses: 9, type: "mecquoise" },
-        { id: 105, name: "Al-Fil", arabic: "الفيل", verses: 5, type: "mecquoise" },
-        { id: 106, name: "Quraysh", arabic: "قريش", verses: 4, type: "mecquoise" },
-        { id: 107, name: "Al-Ma'un", arabic: "الماعون", verses: 7, type: "mecquoise" },
-        { id: 108, name: "Al-Kawthar", arabic: "الكوثر", verses: 3, type: "mecquoise" },
-        { id: 109, name: "Al-Kafirun", arabic: "الكافرون", verses: 6, type: "mecquoise" },
-        { id: 110, name: "An-Nasr", arabic: "النصر", verses: 3, type: "médinoise" },
-        { id: 111, name: "Al-Masad", arabic: "المسد", verses: 5, type: "mecquoise" },
-        { id: 112, name: "Al-Ikhlas", arabic: "الإخلاص", verses: 4, type: "mecquoise" },
-        { id: 113, name: "Al-Falaq", arabic: "الفلق", verses: 5, type: "mecquoise" },
-        { id: 114, name: "An-Nas", arabic: "الناس", verses: 6, type: "mecquoise" }
-    ];
-
-    function loadSurah() {
-        const container = document.getElementById('surahList');
-        container.innerHTML = "";
-        quranList.forEach(surah => {
-            const card = document.createElement('a');
-            card.href = `reader.html?id=${surah.id}`;
-            card.className = 'surah-card';
-            card.innerHTML = `
-                <div class="surah-info">
-                    <div class="surah-number">${surah.id}</div>
-                    <div>
-                        <div class="surah-name">${surah.name}</div>
-                        <div class="surah-meta">${surah.type} • ${surah.verses} Versets</div>
-                    </div>
-                </div>
-                <div class="ar-name">${surah.arabic}</div>
-            `;
-            container.appendChild(card);
-        });
-    }
-    
-    // Jalankan fungsi saat halaman dimuat
-    window.onload = loadSurah;
-</script>
-</body>
-</html>
+        {
