@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecteur de Coran</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #004d40;
+            --secondary: #00695c;
+            --bg: #f8fafc;
+            --accent: #f4bb44;
+        }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: #1e293b; padding-bottom: 50px; }
+        header { background: #004d40; color: white; padding: 15px; text-align: center; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .back-link { color: white; text-decoration: none; font-size: 24px; width: 50px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+        
+        .surah-info-container { text-align: center; margin-bottom: 20px; }
+        .title { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .bismillah { font-family: 'Amiri', serif; font-size: 20px; color: var(--secondary); margin-bottom: 12px; }
+        
+        .verse-card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .verse-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .verse-num { font-weight: 700; color: var(--primary); font-size: 14px; }
+        
+        .btn-audio {
+            background: var(--primary); color: white; border: none; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-audio:hover { background: var(--secondary); }
+        
+        .ar-text { font-family: 'Amiri', serif; font-size: 26px; text-align: right; direction: rtl; color: #000; line-height: 2.2; margin-bottom: 10px; }
+        .en-text { font-size: 14px; color: #475569; font-style: italic; border-left: 3px solid var(--accent); padding-left: 15px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="back-link">←</a>
+    <div style="font-weight: 600;" id="headerTitle">Sourate</div>
+    <div style="width: 50px;"></div>
+</header>
+
+<div class="container">
+    <div class="surah-info-container">
+        <div class="title" id="surahTitle">Chargement...</div>
+        <div class="bismillah" id="surahBismillah"></div>
+    </div>
+    <div id="versesContainer"></div>
+</div>
+
+<audio id="audioPlayer" style="display:none;"></audio>
+
+<script>
+    let currentPlayingBtn = null;
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    async function loadData() {
+        try {
+            const qRes = await fetch('quran.json');
+            const qData = await qRes.json();
+
+            // Menggunakan file fr.shahih.json sesuai instruksi
+            const sRes = await fetch('fr.shahih.json');
+            const sData = await sRes.json();
+
+            renderPage(qData, sData);
+        } catch (error) {
+            console.error("Gagal memuat data:", error);
+            document.getElementById('surahTitle').innerText = "Erreur";
+            document.getElementById('versesContainer').innerHTML = `<p style="text-align:center;">Vérifiez que les fichiers quran.json et fr.shahih.json sont présents.</p>`;
+        }
+    }
+
+    function renderPage(quranData, sahihData) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const surahId = parseInt(urlParams.get('id')) || 1;
+
+        const currentSurah = quranData.find(s => s.id === surahId);
+        if (!currentSurah) {
+            document.getElementById('surahTitle').innerText = "Pas trouvé";
+            return;
+        }
+
+        document.getElementById('surahTitle').innerText = `${currentSurah.name} - ${currentSurah.transliteration}`;
+        document.getElementById('headerTitle').innerText = currentSurah.name;
+
+        if (surahId !== 1) {
+            document.getElementById('surahBismillah').innerText = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ";
+        } else {
+            document.getElementById('surahBismillah').innerText = "";
+        }
+
+        let sahihSurah = null;
+        if (sahihData && sahihData.data && sahihData.data.surahs) {
+            sahihSurah = sahihData.data.surahs.find(s => s.number === surahId);
+        }
+
+        const container = document.getElementById('versesContainer');
+        container.innerHTML = "";
+
+        currentSurah.verses.forEach((verse, index) => {
+            let transText = "Traduction non disponible.";
+            if (sahihSurah && sahihSurah.ayahs && sahihSurah.ayahs[index]) {
+                transText = sahihSurah.ayahs[index].text;
+            }
+
+            const globalAyahNumber = getGlobalAyahNumber(quranData, surahId, index);
+            const isBismillah = verse.text.includes("بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ");
+            if (surahId !== 1 && isBismillah) return;
+
+            const card = document.createElement('div');
+            card.className = 'verse-card';
+            card.innerHTML = `
+                <div class="verse-header">
+                    <div class="verse-num">Verset ${verse.id}</div>
+                    <button class="btn-audio" onclick="playAyah(${globalAyahNumber}, this)">
+                        ▶ Audio
+                    </button>
+                </div>
+                <div class="ar-text">${verse.text}</div>
+                <div class="en-text">${transText}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function getGlobalAyahNumber(quranData, currentSurahId, currentIndex) {
+        let globalNumber = 0;
+        for (let i = 0; i < currentSurahId - 1; i++) {
+            globalNumber += quranData[i].verses.length;
+        }
+        globalNumber += (currentIndex + 1);
+        return globalNumber;
+    }
+
+    function playAyah(globalAyahNumber, buttonElement) {
+        const audioUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${globalAyahNumber}.mp3`;
+
+        if (audioPlayer.src === audioUrl && !audioPlayer.paused) {
+            audioPlayer.pause();
+            buttonElement.innerHTML = "▶ Audio";
+            currentPlayingBtn = null;
+        } else {
+            if (currentPlayingBtn) currentPlayingBtn.innerHTML = "▶ Audio";
+            buttonElement.innerHTML = "<i>Chargement...</i>";
+            audioPlayer.src = audioUrl;
+            audioPlayer.play()
+                .then(() => {
+                    buttonElement.innerHTML = "⏸ Pause";
+                    currentPlayingBtn = buttonElement;
+                })
+                .catch(err => {
+                    alert("Erreur de chargement audio.");
+                    buttonElement.innerHTML = "▶ Audio";
+                });
+        }
+        audioPlayer.onended = () => { if (buttonElement) buttonElement.innerHTML = "▶ Audio"; };
+    }
+    window.onload = loadData;
+</script>
+</body>
+</html>
