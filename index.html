@@ -1,3 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Saint Coran</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --emerald: #064e3b; --gold: #d97706; --bg: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: #1e293b; padding-bottom: 50px; }
+        header { background: var(--emerald); color: white; padding: 50px 20px; text-align: center; border-bottom: 4px solid var(--gold); }
+        .container { max-width: 600px; margin: -30px auto 0; padding: 0 15px; }
+        .surah-card { background: white; padding: 18px; margin-bottom: 12px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: inherit; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .surah-card:active { transform: scale(0.98); background: #f1f5f9; }
+        .surah-info { display: flex; align-items: center; gap: 15px; }
+        .surah-number { background: var(--emerald); color: white; width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; }
+        .surah-name { font-weight: 700; font-size: 16px; color: var(--emerald); }
+        .surah-meta { font-size: 11px; color: #64748b; text-transform: uppercase; }
+        .ar-name { font-family: 'Amiri', serif; font-size: 24px; color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 style="margin:0; font-size: 26px; font-weight: 800;">Le Saint Coran</h1>
+    <p style="margin:8px 0 0; opacity: 0.8; font-size: 13px; letter-spacing: 1px;">TRADUCTION FRANÇAISE</p>
+</header>
+
+<div class="container" id="surahList"></div>
+
+<script>
+    const quranList = [
+        { id: 1, name: "Al-Fatihah", arabic: "الفاتحة", verses: 7, type: "mecquoise" },
+        { id: 2, name: "Al-Baqarah", arabic: "البقرة", verses: 286, type: "médinoise" },
+        { id: 3, name: "Ali 'Imran", arabic: "آل عمران", verses: 200, type: "médinoise" },
+        { id: 4, name: "An-Nisa", arabic: "النساء", verses: 176, type: "médinoise" },
+        { id: 5, name: "Al-Ma'idah", arabic: "المائدة", verses: 120, type: "médinoise" },
+        { id: 6, name: "Al-An'am", arabic: "الأنعام", verses: 165, type: "mecquoise" },
+        { id: 7, name: "Al-A'raf", arabic: "الأعراف", verses: 206, type: "mecquoise" },
+        { id: 8, name: "Al-Anfal", arabic: "الأنفال", verses: 75, type: "médinoise" },
+        { id: 9, name: "At-Tawbah", arabic: "التوبة", verses: 129, type: "médinoise" },
+        { id: 10, name: "Yunus", arabic: "يونس", verses: 109, type: "mecquoise" },
+        { id: 11, name: "Hud", arabic: "هود", verses: 123, type: "mecquoise" },
+        { id: 12, name: "Yusuf", arabic: "يوسف", verses: 111, type: "mecquoise" },
+        { id: 13, name: "Ar-Ra'd", arabic: "الرعد", verses: 43, type: "médinoise" },
+        { id: 14, name: "Ibrahim", arabic: "إبراهيم", verses: 52, type: "mecquoise" },
+        { id: 15, name: "Al-Hijr", arabic: "الحجر", verses: 99, type: "mecquoise" },
+        { id: 16, name: "An-Nahl", arabic: "النحل", verses: 128, type: "mecquoise" },
+        { id: 17, name: "Al-Isra", arabic: "الإسراء", verses: 111, type: "mecquoise" },
+        { id: 18, name: "Al-Kahf", arabic: "الكهف", verses: 110, type: "mecquoise" },
+        { id: 19, name: "Maryam", arabic: "مريم", verses: 98, type: "mecquoise" },
+        { id: 20, name: "Taha", arabic: "طه", verses: 135, type: "mecquoise" },
+        { id: 21, name: "Al-Anbiya", arabic: "الأنبياء", verses: 112, type: "mecquoise" },
+        { id: 22, name: "Al-Hajj", arabic: "الحج", verses: 78, type: "médinoise" },
+        { id: 23, name: "Al-Mu'minun", arabic: "المؤمنون", verses: 118, type: "mecquoise" },
+        { id: 24, name: "An-Nur", arabic: "النور", verses: 64, type: "médinoise" },
+        { id: 25, name: "Al-Furqan", arabic: "الفرقان", verses: 77, type: "mecquoise" },
+        { id: 26, name: "Ash-Shu'ara", arabic: "الشعراء", verses: 227, type: "mecquoise" },
+        { id: 27, name: "An-Naml", arabic: "النمل", verses: 93, type: "mecquoise" },
+        { id: 28, name: "Al-Qasas", arabic: "القصص", verses: 88, type: "mecquoise" },
+        { id: 29, name: "Al-Ankabut", arabic: "العنكبوت", verses: 69, type: "mecquoise" },
+        { id: 30, name: "Ar-Rum", arabic: "الروم", verses: 60, type: "mecquoise" },
+        { id: 31, name: "Luqman", arabic: "لقمان", verses: 34, type: "mecquoise" },
+        { id: 32, name: "As-Sajdah", arabic: "السجدة", verses: 30, type: "mecquoise" },
+        { id: 33, name: "Al-Ahzab", arabic: "الأحزاب", verses: 73, type: "médinoise" },
+        { id: 34, name: "Saba", arabic: "سبأ", verses: 54, type: "mecquoise" },
+        { id: 35, name: "Fatir", arabic: "فاطر", verses: 45, type: "mecquoise" },
+        { id: 36, name: "Ya-Sin", arabic: "يس", verses: 83, type: "mecquoise" },
+        { id: 37, name: "As-Saffat", arabic: "الصافات", verses: 182, type: "mecquoise" },
+        { id: 38, name: "Sad", arabic: "ص", verses: 88, type: "mecquoise" },
+        { id: 39, name: "Az-Zumar", arabic: "الزمر", verses: 75, type: "mecquoise" },
+        { id: 40, name: "Ghafir", arabic: "غافر", verses: 85, type: "mecquoise" },
+        { id: 41, name: "Fussilat", arabic: "فصلت", verses: 54, type: "mecquoise" },
+        { id: 42, name: "Ash-Shura", arabic: "الشورى", verses: 53, type: "mecquoise" },
+        { id: 43, name: "Az-Zukhruf", arabic: "الزخرف", verses: 89, type: "mecquoise" },
+        { id: 44, name: "Ad-Dukhan", arabic: "الدخان", verses: 59, type: "mecquoise" },
         { id: 45, name: "Al-Jathiyah", arabic: "الجاثية", verses: 37, type: "mecquoise" },
         { id: 46, name: "Al-Ahqaf", arabic: "الأحقاف", verses: 35, type: "mecquoise" },
         { id: 47, name: "Muhammad", arabic: "محمد", verses: 38, type: "médinoise" },
@@ -52,6 +128,7 @@
         { id: 96, name: "Al-'Alaq", arabic: "العلق", verses: 19, type: "mecquoise" },
         { id: 97, name: "Al-Qadr", arabic: "القدر", verses: 5, type: "mecquoise" },
         { id: 98, name: "Al-Bayyinah", arabic: "البينة", verses: 8, type: "médinoise" },
+        { id: 99, name: "Az-Zalzalah", arabic: "الزلزلة", verses: 8, type: "médinoise" },
         { id: 100, name: "Al-'Adiyat", arabic: "العاديات", verses: 11, type: "mecquoise" },
         { id: 101, name: "Al-Qari'ah", arabic: "القارعة", verses: 11, type: "mecquoise" },
         { id: 102, name: "At-Takathur", arabic: "التكاثر", verses: 8, type: "mecquoise" },
@@ -69,14 +146,10 @@
         { id: 114, name: "An-Nas", arabic: "الناس", verses: 6, type: "mecquoise" }
     ];
 
-    function loadSurah() {
+    function renderSurah() {
         const container = document.getElementById('surahList');
-        container.innerHTML = "";
-        quranList.forEach(surah => {
-            const card = document.createElement('a');
-            card.href = `reader.html?id=${surah.id}`;
-            card.className = 'surah-card';
-            card.innerHTML = `
+        container.innerHTML = quranList.map(surah => `
+            <a href="reader.html?id=${surah.id}" class="surah-card">
                 <div class="surah-info">
                     <div class="surah-number">${surah.id}</div>
                     <div>
@@ -85,11 +158,10 @@
                     </div>
                 </div>
                 <div class="ar-name">${surah.arabic}</div>
-            `;
-            container.appendChild(card);
-        });
+            </a>
+        `).join('');
     }
-    window.onload = loadSurah;
+    window.onload = renderSurah;
 </script>
 </body>
 </html>
