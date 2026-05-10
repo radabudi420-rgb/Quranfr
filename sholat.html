@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Complet de la Prière (Rite Malékite)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #004d40; --secondary: #00695c; --accent: #f4bb44; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: #1e293b; line-height: 1.6; }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .back-link { color: white; text-decoration: none; font-size: 24px; width: 40px; }
+        
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        
+        /* Menu Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 20px; }
+        .p-btn { background: white; padding: 20px; border-radius: 15px; border: 2px solid transparent; text-align: center; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .p-btn:active { transform: scale(0.95); border-color: var(--accent); }
+        .p-btn h3 { margin: 0; color: var(--primary); }
+        .p-btn span { font-size: 12px; color: #64748b; }
+
+        /* Step Card */
+        .step-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 1px solid #e2e8f0; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .rakaat-badge { background: var(--accent); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; display: inline-block; }
+        
+        .img-box { width: 100%; height: 220px; background: #e2e8f0; border-radius: 15px; margin: 15px 0; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 14px; overflow: hidden; }
+        .img-box img { width: 100%; height: 100%; object-fit: contain; }
+
+        .ar { font-family: 'Amiri', serif; font-size: 26px; text-align: right; direction: rtl; margin: 15px 0; line-height: 2; color: #111; }
+        .en { font-size: 14px; color: #475569; font-style: italic; border-left: 3px solid var(--accent); padding-left: 15px; }
+        .action-title { font-weight: 700; font-size: 18px; color: var(--primary); }
+
+        .hidden { display: none; }
+        .quran-note { background: #e0f2f1; color: #00695c; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="dashboard.html" class="back-link">←</a>
+    <div id="nav-title" style="font-weight: 600;">Guide de la Prière</div>
+    <div style="width:40px;"></div>
+</header>
+
+<div class="container">
+    <div id="menu">
+        <h2 style="text-align: center; color: var(--primary);">Sélectionnez la Prière</h2>
+        <div class="grid">
+            <div class="p-btn" onclick="startPrayer('Fajr', 2)"><h3>Fajr</h3><span>2 Raka'ats</span></div>
+            <div class="p-btn" onclick="startPrayer('Dhouhr', 4)"><h3>Dhouhr</h3><span>4 Raka'ats</span></div>
+            <div class="p-btn" onclick="startPrayer('Asr', 4)"><h3>'Asr</h3><span>4 Raka'ats</span></div>
+            <div class="p-btn" onclick="startPrayer('Maghrib', 3)"><h3>Maghrib</h3><span>3 Raka'ats</span></div>
+            <div class="p-btn" onclick="startPrayer('Isha', 4)"><h3>'Isha</h3><span>4 Raka'ats</span></div>
+        </div>
+    </div>
+
+    <div id="guide" class="hidden">
+        <button onclick="location.reload()" style="background:none; border:none; color:var(--primary); font-weight:700; margin-bottom:20px; cursor:pointer;">← Changer de Prière</button>
+        <div id="steps-list"></div>
+    </div>
+</div>
+
+<script>
+    // Konten diterjemahkan ke bahasa Prancis dan disesuaikan dengan Fiqh Maliki
+    const content = {
+        niyyahFajr: { title: "An-Niyyah (L'Intention)", ar: "أُصَلِّي فَرْضَ الْفَجْرِ رَكْعَتَيْنِ لِلَّهِ تَعَالَى", en: "J'ai l'intention d'accomplir la prière obligatoire du Fajr pour Allah (se fait dans le cœur)." },
+        niyyahDhuhr: { title: "An-Niyyah (L'Intention)", ar: "أُصَلِّي فَرْضَ الظُّهْرِ أَرْبَعَ رَكَعَاتٍ لِلَّهِ تَعَالَى", en: "J'ai l'intention d'accomplir la prière obligatoire du Dhouhr pour Allah (se fait dans le cœur)." },
+        niyyahAsr: { title: "An-Niyyah (L'Intention)", ar: "أُصَلِّي فَرْضَ الْعَصْرِ أَرْبَعَ رَكَعَاتٍ لِلَّهِ تَعَالَى", en: "J'ai l'intention d'accomplir la prière obligatoire du 'Asr pour Allah (se fait dans le cœur)." },
+        niyyahMaghrib: { title: "An-Niyyah (L'Intention)", ar: "أُصَلِّي فَرْضَ الْمَغْرِبِ ثَلَاثَ رَكَعَاتٍ لِلَّهِ تَعَالَى", en: "J'ai l'intention d'accomplir la prière obligatoire du Maghrib pour Allah (se fait dans le cœur)." },
+        niyyahIsha: { title: "An-Niyyah (L'Intention)", ar: "أُصَلِّي فَرْضَ الْعِشَاءِ أَرْبَعَ رَكَعَاتٍ لِلَّهِ تَعَالَى", en: "J'ai l'intention d'accomplir la prière obligatoire du 'Isha pour Allah (se fait dans le cœur)." },
+        
+        takbir: { title: "Takbiratul Ihram", ar: "اللَّهُ أَكْبَرُ", en: "Allah est le plus Grand. (Levez les mains au niveau des épaules/oreilles : c'est le seul moment où l'on lève les mains chez les Malékites)." },
+        opening: { title: "Position Debout (As-Sadl)", ar: "", en: "Dans l'école Malékite, on laisse les bras relâchés le long du corps (Sadl). L'invocation d'ouverture est généralement omise pour les prières obligatoires." },
+        fatihah: { title: "Al-Fatihah", ar: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ...", en: "Récitez la Sourate Al-Fatiha. (Remarque : selon l'avis Mashhur Malékite, on ne récite pas la Basmala, ni à voix haute ni à voix basse, on commence directement par Al-Hamdulillah)." },
+        
+        ruku: { title: "Ruku' (L'Inclinaison)", ar: "سُبْحَانَ رَبِّيَ الْعَظِيمِ", en: "Gloire à mon Seigneur l'Immense (3x)." },
+        itidal: { title: "I'tidal (Le Redressement)", ar: "سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ. رَبَّنَا وَلَكَ الْحَمْدُ", en: "Allah entend celui qui Le loue. Notre Seigneur, à Toi la louange." },
+        sujud: { title: "Sujud (La Prosternation)", ar: "سُبْحَانَ رَبِّيَ الْأَعْلَى", en: "Gloire à mon Seigneur le Très-Haut (3x)." },
+        sitting: { title: "Julus (Assise entre les deux Sujuds)", ar: "رَبِّ اغْفِرْ لِي وَارْحَمْنِي", en: "Ô Seigneur, pardonne-moi et fais-moi miséricorde." },
+        
+        // Tashahhud versi Maliki (Riwayat Umar bin Khattab)
+        tasyahud_awal: { title: "At-Tashahhud Al-Awwal", ar: "التَّحِيَّاتُ لِلَّهِ الزَّاكِيَاتُ لِلَّهِ الطَّيِّبَاتُ الصَّلَوَاتُ لِلَّهِ...", en: "Position assise pour le premier Tashahhud (Formule de l'Imam Malik)." },
+        tasyahud_akhir: { title: "At-Tashahhud Al-Akhir", ar: "التَّحِيَّاتُ لِلَّهِ الزَّاكِيَاتُ لِلَّهِ... اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ", en: "Dernière assise (Tawarruk) et Prière sur le Prophète (Salawat)." },
+        
+        // Salam versi Maliki (Satu kali ke kanan)
+        salam: { title: "At-Taslim (Salutation finale)", ar: "السَّلَامُ عَلَيْكُمْ", en: "Que la paix soit sur vous. (Les Malékites font un seul salut en tournant la tête vers la droite)." }
+    };
+
+    function startPrayer(name, totalRakaat) {
+        document.getElementById('menu').classList.add('hidden');
+        document.getElementById('guide').classList.remove('hidden');
+        document.getElementById('nav-title').innerText = "Guide : " + name;
+        
+        const list = document.getElementById('steps-list');
+        list.innerHTML = "";
+
+        // Pilih Niat Berdasarkan Sholat
+        let niyyahObj = content.niyyahFajr;
+        if (name === 'Dhouhr') niyyahObj = content.niyyahDhuhr;
+        else if (name === 'Asr') niyyahObj = content.niyyahAsr;
+        else if (name === 'Maghrib') niyyahObj = content.niyyahMaghrib;
+        else if (name === 'Isha') niyyahObj = content.niyyahIsha;
+
+        // 1. Niyyah & Takbir & Position
+        addStep(list, 1, niyyahObj, "stand.jpg");
+        addStep(list, 1, content.takbir, "takbir.jpg");
+        addStep(list, 1, content.opening, "stand.jpg");
+
+        for (let r = 1; r <= totalRakaat; r++) {
+            // Recitations
+            addStep(list, r, content.fatihah, "stand.jpg");
+            if (r <= 2) {
+                let quranNode = document.createElement('div');
+                quranNode.className = "quran-note";
+                quranNode.innerText = "✨ Récitez une sourate du Saint Coran";
+                list.appendChild(quranNode);
+            }
+
+            // Movements
+            addStep(list, r, content.ruku, "ruku.jpg");
+            addStep(list, r, content.itidal, "itidal.jpg");
+            addStep(list, r, content.sujud, "sujud.jpg");
+            addStep(list, r, content.sitting, "sitting.jpg");
+            addStep(list, r, content.sujud, "sujud.jpg");
+
+            // Logic for Tashahhud
+            if (r === 2 && totalRakaat > 2) {
+                addStep(list, r, content.tasyahud_awal, "sitting.jpg");
+            }
+            if (r === totalRakaat) {
+                addStep(list, r, content.tasyahud_akhir, "sitting.jpg");
+                addStep(list, r, content.salam, "salam.jpg");
+            }
+        }
+    }
+
+    function addStep(container, rakaatNum, data, imgFile) {
+        const card = document.createElement('div');
+        card.className = "step-card";
+        
+        // Hide arabic div if empty (like for the opening note)
+        const arHtml = data.ar ? `<div class="ar">${data.ar}</div>` : '';
+        
+        card.innerHTML = `
+            <div class="rakaat-badge">Raka'at ${rakaatNum}</div>
+            <div class="action-title">${data.title}</div>
+            <div class="img-box">
+                <img src="images/${imgFile}" alt="${data.title}" onerror="this.parentElement.innerHTML='[IMAGE: ${data.title}]'">
+            </div>
+            ${arHtml}
+            <div class="en">${data.en}</div>
+        `;
+        container.appendChild(card);
+    }
+</script>
+
+</body>
+</html>

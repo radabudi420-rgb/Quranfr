@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heures de Prière</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --emerald: #064e3b; --gold: #d97706; --bg: #fdfbf7; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: #1e293b; padding-bottom: 90px; }
+        
+        header { background: var(--emerald); color: white; padding: 25px 20px; text-align: center; border-bottom: 4px solid var(--gold); }
+        .container { max-width: 500px; margin: auto; padding: 20px; }
+
+        /* Card de Localisation */
+        .location-box { background: white; padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #eef2f6; }
+        .city-name { font-size: 24px; font-weight: 800; color: var(--emerald); margin: 0; }
+        .date-text { font-size: 14px; color: #64748b; margin-top: 5px; font-weight: 600; }
+
+        /* Formulaire */
+        .search-container { display: flex; gap: 8px; margin-bottom: 20px; }
+        input { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; font-family: inherit; }
+        .btn-search { background: var(--emerald); color: white; border: none; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: 700; }
+        .btn-geo { background: var(--gold); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* Heures de Prière */
+        .prayer-card { 
+            background: white; padding: 20px 25px; border-radius: 18px; 
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; border: 1px solid #f1f5f9; transition: 0.3s;
+        }
+        .prayer-card.active { border: 2px solid var(--gold); background: #fffcf0; transform: scale(1.02); }
+        .p-label { font-weight: 700; font-size: 16px; color: #475569; }
+        .p-time { font-weight: 800; font-size: 20px; color: var(--emerald); }
+        .active .p-label { color: var(--gold); }
+
+        /* Nav Footer */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #e2e8f0; box-shadow: 0 -5px 15px rgba(0,0,0,0.03); }
+        .nav-link { text-decoration: none; color: #94a3b8; font-size: 11px; font-weight: 800; text-align: center; transition: 0.2s; }
+        .nav-link.active { color: var(--emerald); }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 style="margin:0;">Horaires de Prière</h1>
+</header>
+
+<div class="container">
+    <div class="search-container">
+        <input type="text" id="cityInput" placeholder="Ville ou pays...">
+        <button class="btn-search" onclick="fetchByCity()">OK</button>
+        <button class="btn-geo" onclick="getLocation()" title="Ma position">📍</button>
+    </div>
+
+    <div id="infoBox" class="location-box" style="display:none;">
+        <p class="city-name" id="cityName">-</p>
+        <p class="date-text" id="dateFr">-</p>
+    </div>
+
+    <div id="prayerList">
+        <p style="text-align:center; color:#94a3b8; margin-top:50px;">Entrez une ville ou activez le GPS</p>
+    </div>
+</div>
+
+<nav class="nav-bar">
+    <a href="index.html" class="nav-link">
+        <span class="nav-icon">📖</span> CORAN
+    </a>
+    <a href="prieres.html" class="nav-link active">
+        <span class="nav-icon">🕌</span> PRIÈRES
+    </a>
+</nav>
+
+<script>
+    const prayerList = document.getElementById('prayerList');
+    const infoBox = document.getElementById('infoBox');
+
+    // Traduction des noms de prières
+    const names = {
+        Fajr: "Fajr",
+        Sunrise: "Lever du soleil",
+        Dhuhr: "Dhuhr",
+        Asr: "Asr",
+        Maghrib: "Maghrib",
+        Isha: "Isha"
+    };
+
+    async function fetchByCity() {
+        const city = document.getElementById('cityInput').value;
+        if (!city) return;
+        updateUI(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=&method=3`, city);
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            prayerList.innerHTML = '<p style="text-align:center;">Localisation en cours...</p>';
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                updateUI(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=3`, "Ma Position");
+            });
+        }
+    }
+
+    async function updateUI(url, locationName) {
+        prayerList.innerHTML = '<p style="text-align:center;">Chargement...</p>';
+        try {
+            const res = await fetch(url);
+            const json = await res.json();
+            const data = json.data;
+            const times = data.timings;
+
+            infoBox.style.display = 'block';
+            document.getElementById('cityName').innerText = locationName.toUpperCase();
+            document.getElementById('dateFr').innerText = data.date.readable;
+
+            const displayList = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+            
+            // Trouver la prochaine prière
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+
+            prayerList.innerHTML = displayList.map(id => {
+                const [h, m] = times[id].split(':');
+                const pTime = parseInt(h) * 60 + parseInt(m);
+                const isActive = pTime > currentTime; // Simplification pour démo
+                
+                return `
+                    <div class="prayer-card">
+                        <span class="p-label">${names[id]}</span>
+                        <span class="p-time">${times[id]}</span>
+                    </div>
+                `;
+            }).join('');
+
+            localStorage.setItem('lastCity', locationName);
+        } catch (e) {
+            prayerList.innerHTML = '<p style="text-align:center; color:red;">Erreur: Ville introuvable.</p>';
+        }
+    }
+
+    // Auto-load au démarrage
+    window.onload = () => {
+        const saved = localStorage.getItem('lastCity');
+        if (saved && saved !== "Ma Position") {
+            document.getElementById('cityInput').value = saved;
+            fetchByCity();
+        } else {
+            getLocation();
+        }
+    };
+</script>
+</body>
+</html>
