@@ -12,28 +12,37 @@
         header { background: var(--emerald); color: white; padding: 15px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .back-btn { color: white; text-decoration: none; font-size: 24px; padding: 0 10px; font-weight: bold; }
         
+        /* Bar Kontrol Toggle */
+        .control-bar { 
+            background: white; border-bottom: 1px solid #e5e7eb; padding: 10px; 
+            display: flex; justify-content: center; gap: 10px; position: sticky; top: 58px; z-index: 90;
+        }
+        .toggle-btn { 
+            background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; 
+            border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; color: #475569;
+        }
+        .toggle-btn.active { background: var(--gold); color: white; border-color: var(--gold); }
+
         .container { max-width: 600px; margin: auto; padding: 20px; }
         .surah-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
         .surah-title { font-size: 28px; color: var(--emerald); font-weight: 700; margin: 0; }
-        
         .bismillah { font-family: 'Amiri', serif; font-size: 30px; color: var(--gold); margin: 20px 0; display: none; text-align: center; }
 
         .verse-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--gold); }
         .verse-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .verse-num { background: #f1f5f9; color: var(--emerald); padding: 4px 12px; border-radius: 8px; font-weight: bold; font-size: 12px; }
         
-        .audio-btn { background: var(--emerald); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-        .audio-btn.playing { background: var(--gold); }
+        .audio-btn { background: var(--emerald); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
 
         .ar-text { font-family: 'Amiri', serif; font-size: 32px; text-align: right; line-height: 2.2; color: #111; direction: rtl; margin-bottom: 10px; }
         
-        /* Gaya Transliterasi */
-        .trans-text { font-size: 14px; color: var(--gold); line-height: 1.4; margin-bottom: 15px; font-weight: 600; }
+        /* Kelas untuk sembunyikan/tampilkan */
+        .trans-text { font-size: 14px; color: var(--gold); line-height: 1.4; margin-bottom: 15px; font-weight: 600; display: block; }
+        .fr-text { font-size: 15px; color: #475569; line-height: 1.6; border-top: 1px solid #f1f5f9; padding-top: 15px; font-style: italic; display: block; }
         
-        .fr-text { font-size: 15px; color: #475569; line-height: 1.6; border-top: 1px solid #f1f5f9; padding-top: 15px; font-style: italic; }
-        
+        .hidden { display: none !important; }
+
         .loading { text-align: center; padding: 50px; color: var(--emerald); font-weight: bold; }
-        .error-msg { background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 10px; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -43,8 +52,13 @@
     <div style="flex-grow: 1; text-align: center; font-weight: 600;" id="headerTitle">Lecture...</div>
 </header>
 
+<div class="control-bar" id="controlBar" style="display:none;">
+    <button class="toggle-btn active" id="btnTranslit" onclick="toggleSection('trans-text', 'btnTranslit')">PHONÉTIQUE</button>
+    <button class="toggle-btn active" id="btnTrad" onclick="toggleSection('fr-text', 'btnTrad')">TRADUCTION</button>
+</div>
+
 <div class="container">
-    <div id="loader" class="loading">Chargement des versets...</div>
+    <div id="loader" class="loading">Chargement...</div>
     <div id="content" style="display:none;">
         <div class="surah-header">
             <h1 class="surah-title" id="surahTitle"></h1>
@@ -63,7 +77,6 @@
 
     async function loadSurah() {
         try {
-            // Kita ambil data Transliterasi dari API eksternal karena di JSON lokal tidak ada
             const [resAr, resFr, resTrans] = await Promise.all([
                 fetch('quran.json'),
                 fetch('fr.shahih.json'),
@@ -78,11 +91,21 @@
             const surahFr = dataFrRaw.data.surahs.find(s => s.number === surahId);
             const translitAyahs = dataTrans.data.ayahs;
 
-            if (surahAr && surahFr) {
-                renderPage(surahAr, surahFr, translitAyahs);
-            }
+            if (surahAr && surahFr) renderPage(surahAr, surahFr, translitAyahs);
         } catch (error) {
-            document.getElementById('loader').innerHTML = `<div class="error-msg">Erreur de chargement.</div>`;
+            document.getElementById('loader').innerHTML = "Erreur de chargement.";
+        }
+    }
+
+    // Fungsi Toggle
+    function toggleSection(className, btnId) {
+        const elements = document.getElementsByClassName(className);
+        const btn = document.getElementById(btnId);
+        
+        btn.classList.toggle('active');
+        
+        for (let el of elements) {
+            el.classList.toggle('hidden');
         }
     }
 
@@ -94,28 +117,21 @@
         if (audioPlayer.src === url && !audioPlayer.paused) {
             audioPlayer.pause();
             btn.innerHTML = '▶ Écouter';
-            btn.classList.remove('playing');
         } else {
-            document.querySelectorAll('.audio-btn').forEach(b => {
-                b.innerHTML = '▶ Écouter';
-                b.classList.remove('playing');
-            });
             audioPlayer.src = url;
             audioPlayer.play();
             btn.innerHTML = '⏸ Pause';
-            btn.classList.add('playing');
         }
     }
 
     function renderPage(surahAr, surahFr, translit) {
         document.getElementById('loader').style.display = 'none';
         document.getElementById('content').style.display = 'block';
+        document.getElementById('controlBar').style.display = 'flex';
         document.getElementById('headerTitle').innerText = surahFr.englishName;
         document.getElementById('surahTitle').innerText = surahFr.name;
 
-        if (surahId !== 1 && surahId !== 9) {
-            document.getElementById('surahBismillah').style.display = 'block';
-        }
+        if (surahId !== 1 && surahId !== 9) document.getElementById('surahBismillah').style.display = 'block';
 
         const container = document.getElementById('versesContainer');
         let html = '';
@@ -128,9 +144,7 @@
                 <div class="verse-card">
                     <div class="verse-top">
                         <span class="verse-num">VERSET ${verse.id}</span>
-                        <button class="audio-btn" onclick="playAudio(${verse.id}, this)">
-                            ▶ Écouter
-                        </button>
+                        <button class="audio-btn" onclick="playAudio(${verse.id}, this)">▶ Écouter</button>
                     </div>
                     <div class="ar-text">${verse.text}</div>
                     <div class="trans-text">${transText}</div>
