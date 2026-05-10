@@ -7,117 +7,84 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --emerald: #064e3b; --gold: #d97706; --bg: #fdfbf7; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); padding-bottom: 50px; }
-        header { 
-            background: var(--emerald); color: white; padding: 15px; 
-            display: flex; align-items: center; position: sticky; top: 0; z-index: 100;
-        }
-        .back-btn { color: white; text-decoration: none; font-size: 20px; padding: 0 10px; font-weight: bold; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: #1e293b; }
+        header { background: var(--emerald); color: white; padding: 15px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .back-btn { color: white; text-decoration: none; font-size: 24px; margin-right: 15px; line-height: 1; }
         .container { max-width: 600px; margin: auto; padding: 20px; }
-        .surah-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #eee; }
-        .surah-title { font-size: 28px; color: var(--emerald); margin: 0; }
-        .bismillah { font-family: 'Amiri', serif; font-size: 30px; color: var(--gold); margin: 20px 0; display: none; }
-        .verse-card { 
-            background: white; border-radius: 15px; padding: 20px; 
-            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--gold);
-        }
-        .verse-num { font-size: 12px; color: #94a3b8; font-weight: bold; margin-bottom: 10px; display: block; }
-        .ar-text { 
-            font-family: 'Amiri', serif; font-size: 32px; text-align: right; 
-            line-height: 2; color: #111; direction: rtl; margin-bottom: 10px;
-        }
-        .fr-text { font-size: 15px; color: #475569; line-height: 1.5; font-style: italic; border-top: 1px solid #f1f5f9; padding-top: 10px; }
-        .error-msg { background: #fee2e2; color: #b91c1c; padding: 20px; border-radius: 10px; text-align: center; }
+        .verse-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .ar { font-family: 'Amiri', serif; font-size: 32px; text-align: right; direction: rtl; line-height: 2; margin-bottom: 15px; }
+        .fr { color: #475569; font-style: italic; line-height: 1.6; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+        .bismillah { font-family: 'Amiri', serif; font-size: 32px; text-align: center; color: var(--gold); padding: 30px 0; display: none; }
+        .loader { text-align: center; margin-top: 50px; color: var(--emerald); font-weight: 600; }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="index.html" class="back-btn">← Retour</a>
-    <div id="headerTitle" style="flex-grow:1; text-align:center; font-weight:600;">Chargement...</div>
+    <a href="index.html" class="back-btn">‹</a>
+    <div id="headerTitle" style="font-weight: 700;">Chargement...</div>
 </header>
 
 <div class="container">
-    <div class="surah-header">
-        <h1 class="surah-title" id="surahTitle">...</h1>
-        <div class="bismillah" id="surahBismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
-    </div>
-    <div id="versesContainer">
-        </div>
+    <div id="bismillah" class="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    <div id="loader" class="loader">Chargement des versets...</div>
+    <div id="verses"></div>
 </div>
 
 <script>
-    // 1. Ambil ID surat dari URL (contoh: reader.html?id=36)
-    const urlParams = new URLSearchParams(window.location.search);
-    const surahId = urlParams.get('id');
+    const params = new URLSearchParams(window.location.search);
+    const surahId = params.get('id') || 1;
 
-    async function loadQuranContent() {
-        const container = document.getElementById('versesContainer');
-        
-        if (!surahId) {
-            container.innerHTML = "<div class='error-msg'>ID de sourate non trouvé.</div>";
-            return;
-        }
-
+    async function loadQuran() {
         try {
-            // 2. Ambil file JSON lokal
+            // Memanggil file JSON dari root folder yang sama di GitHub
             const [resAr, resFr] = await Promise.all([
                 fetch('quran.json'),
                 fetch('fr.shahih.json')
             ]);
 
-            if (!resAr.ok || !resFr.ok) throw new Error("File JSON tidak ditemukan");
-
             const dataAr = await resAr.json();
             const dataFr = await resFr.json();
 
-            // 3. Filter ayat berdasarkan nomor surat (chapter)
-            const versesAr = dataAr.quran.filter(v => v.chapter == surahId);
-            const versesFr = dataFr.quran.filter(v => v.chapter == surahId);
+            // Seringkali struktur JSON fawazahmed0 dibungkus nama objeknya:
+            // Kita coba ambil array quran dari properti 'quran' atau langsung dari data
+            const versesArrayAr = dataAr.quran || dataAr;
+            const versesArrayFr = dataFr.quran || dataFr;
 
-            renderVerses(versesAr, versesFr);
-        } catch (error) {
-            console.error(error);
-            container.innerHTML = `<div class='error-msg'>
-                <b>Erreur de chargement</b><br>
-                Pastikan file <b>quran.json</b> dan <b>fr.shahih.json</b> ada di folder yang sama.
-            </div>`;
+            // Filter ayat berdasarkan surahId
+            const filteredAr = versesArrayAr.filter(v => v.chapter == surahId);
+            const filteredFr = versesArrayFr.filter(v => v.chapter == surahId);
+
+            displayVerses(filteredAr, filteredFr);
+        } catch (err) {
+            console.error(err);
+            document.getElementById('loader').innerHTML = 
+                `<div style="color:red">Gagal memuat file JSON.<br>
+                Pastikan file <b>quran.json</b> dan <b>fr.shahih.json</b> sudah di-upload ke GitHub.</div>`;
         }
     }
 
-    function renderVerses(ar, fr) {
-        const container = document.getElementById('versesContainer');
-        const bismillah = document.getElementById('surahBismillah');
-        const headerTitle = document.getElementById('headerTitle');
-        const surahTitle = document.getElementById('surahTitle');
+    function displayVerses(ar, fr) {
+        const loader = document.getElementById('loader');
+        const container = document.getElementById('verses');
+        const bismillah = document.getElementById('bismillah');
+        
+        loader.style.display = 'none';
+        document.getElementById('headerTitle').innerText = "Sourate " + surahId;
 
-        headerTitle.innerText = "Sourate " + surahId;
-        surahTitle.innerText = "Sourate " + surahId;
+        // Tampilkan Bismillah kecuali At-Tawbah (9)
+        if (surahId != 9) bismillah.style.display = 'block';
 
-        // Tampilkan Bismillah kecuali Al-Fatihah (1) dan At-Tawbah (9)
-        if (surahId != 1 && surahId != 9) {
-            bismillah.style.display = 'block';
-        }
-
-        let html = '';
-        ar.forEach((verse, index) => {
-            const translation = fr[index] ? fr[index].text : "(Traduction non disponible)";
-            html += `
-                <div class="verse-card">
-                    <span class="verse-num">VERSET ${verse.verse}</span>
-                    <div class="ar-text">${verse.text}</div>
-                    <div class="fr-text">${translation}</div>
-                </div>
-            `;
-        });
-
-        container.innerHTML = html;
+        container.innerHTML = ar.map((v, i) => `
+            <div class="verse-card">
+                <div style="font-size:12px; color:var(--emerald); font-weight:700; margin-bottom:10px;">VERSET ${v.verse}</div>
+                <div class="ar">${v.text}</div>
+                <div class="fr">${fr[i] ? fr[i].text : ''}</div>
+            </div>
+        `).join('');
     }
 
-    // Jalankan fungsi saat halaman dibuka
-    loadQuranContent();
+    loadQuran();
 </script>
-
 </body>
 </html>
