@@ -1,57 +1,125 @@
-        }
-    }
-
-    // Fungsi Toggle
-    function toggleSection(className, btnId) {
-        const elements = document.getElementsByClassName(className);
-        const btn = document.getElementById(btnId);
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Saint Coran - Lecture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --emerald: #064e3b; --gold: #d97706; --bg: #fdfbf7; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); padding-bottom: 80px; color: #1e293b; }
         
+        header { background: var(--emerald); color: white; padding: 15px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .back-btn { color: white; text-decoration: none; font-size: 24px; padding: 0 10px; font-weight: bold; }
+        
+        .control-bar { background: white; border-bottom: 1px solid #e5e7eb; padding: 10px; display: flex; justify-content: space-around; position: sticky; top: 58px; z-index: 99; font-size: 13px; font-weight: 600; }
+        .toggle-btn { padding: 6px 12px; border-radius: 20px; border: 1px solid #e5e7eb; cursor: pointer; transition: 0.3s; }
+        .toggle-btn.active { background: var(--emerald); color: white; border-color: var(--emerald); }
+
+        .surah-header { text-align: center; padding: 40px 20px; background: white; margin-bottom: 10px; }
+        .ar-name { font-family: 'Amiri', serif; font-size: 48px; color: var(--emerald); margin-bottom: 10px; }
+        .fr-name { font-size: 20px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+        .bismillah { font-family: 'Amiri', serif; font-size: 32px; margin: 30px 0; color: var(--emerald); }
+
+        .verse-card { padding: 30px 20px; border-bottom: 1px solid #eee; background: white; }
+        .verse-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .verse-num { background: #f1f5f9; color: #64748b; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: bold; }
+        .audio-btn { background: none; border: 1.2px solid var(--emerald); color: var(--emerald); padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; }
+
+        .ar-text { font-family: 'Amiri', serif; font-size: 32px; text-align: right; direction: rtl; line-height: 2.2; margin-bottom: 20px; }
+        .trans-text { color: var(--gold); font-style: italic; font-size: 15px; margin-bottom: 15px; display: block; }
+        .fr-text { font-size: 16px; line-height: 1.8; color: #334155; display: block; }
+
+        #loader { text-align: center; padding: 50px; font-weight: 600; color: var(--emerald); }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="back-btn">←</a>
+    <span id="headerTitle" style="margin-left: 10px; font-weight: 600;">Chargement...</span>
+</header>
+
+<div class="control-bar" id="controlBar" style="display: none;">
+    <div class="toggle-btn active" onclick="toggleView('trans')">Latin</div>
+    <div class="toggle-btn active" onclick="toggleView('fr')">Français</div>
+</div>
+
+<div id="loader">Chargement du Coran...</div>
+
+<div id="content" style="display: none;">
+    <div class="surah-header">
+        <div id="surahTitle" class="ar-name"></div>
+        <div id="surahSub" class="fr-name"></div>
+        <div id="surahBismillah" class="bismillah" style="display: none;">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
+    </div>
+    <div id="versesContainer"></div>
+</div>
+
+<script src="quran.js"></script>
+<script src="fr_translation.js"></script>
+
+<script>
+    let surahId = 1;
+    const audioPlayer = new Audio();
+    let currentAudioBtn = null;
+
+    function toggleView(type) {
+        const elements = document.querySelectorAll('.' + type + '-text');
+        const btn = event.currentTarget;
         btn.classList.toggle('active');
-        
-        for (let el of elements) {
-            el.classList.toggle('hidden');
-        }
+        elements.forEach(el => el.style.display = btn.classList.contains('active') ? 'block' : 'none');
     }
 
-    function playAudio(verseNum, btn) {
-        const s = String(surahId).padStart(3, '0');
-        const v = String(verseNum).padStart(3, '0');
-        const url = `https://www.everyayah.com/data/Alafasy_128kbps/${s}${v}.mp3`;
+    function loadSurah() {
+        const params = new URLSearchParams(window.location.search);
+        surahId = parseInt(params.get('id')) || 1;
 
-        if (audioPlayer.src === url && !audioPlayer.paused) {
-            audioPlayer.pause();
-            btn.innerHTML = '▶ Écouter';
+        // Logika Offline menggunakan Variabel JS
+        if (typeof quranData !== 'undefined' && typeof frData !== 'undefined') {
+            const surahAr = quranData.find(s => s.id === surahId);
+            const surahFr = frData.data.surahs.find(s => s.number === surahId);
+
+            if (surahAr && surahFr) {
+                renderPage(surahAr, surahFr);
+            } else {
+                document.getElementById('loader').innerText = "Sourate non trouvée.";
+            }
         } else {
-            audioPlayer.src = url;
-            audioPlayer.play();
-            btn.innerHTML = '⏸ Pause';
+            document.getElementById('loader').innerText = "Erreur: Fichiers de données (js) introuvables.";
         }
     }
 
-    function renderPage(surahAr, surahFr, translit) {
+    function renderPage(surahAr, surahFr) {
         document.getElementById('loader').style.display = 'none';
         document.getElementById('content').style.display = 'block';
         document.getElementById('controlBar').style.display = 'flex';
-        document.getElementById('headerTitle').innerText = surahFr.englishName;
-        document.getElementById('surahTitle').innerText = surahFr.name;
+        
+        document.getElementById('headerTitle').innerText = surahAr.transliteration;
+        document.getElementById('surahTitle').innerText = surahAr.name;
+        document.getElementById('surahSub').innerText = surahAr.transliteration;
 
-        if (surahId !== 1 && surahId !== 9) document.getElementById('surahBismillah').style.display = 'block';
+        // Bismillah logic (Sembunyikan untuk Fatihah/ID 1 dan At-Tawbah/ID 9)
+        if (surahId !== 1 && surahId !== 9) {
+            document.getElementById('surahBismillah').style.display = 'block';
+        }
 
         const container = document.getElementById('versesContainer');
         let html = '';
 
         surahAr.verses.forEach((verse, index) => {
             const frenchText = surahFr.ayahs[index] ? surahFr.ayahs[index].text : '';
-            const transText = translit[index] ? translit[index].text : '';
+            // Ambil nomor global untuk audio
+            const globalAyahNum = getGlobalNum(surahId, index);
             
             html += `
                 <div class="verse-card">
                     <div class="verse-top">
                         <span class="verse-num">VERSET ${verse.id}</span>
-                        <button class="audio-btn" onclick="playAudio(${verse.id}, this)">▶ Écouter</button>
+                        <button class="audio-btn" onclick="playAudio(${globalAyahNum}, this)">▶ Écouter</button>
                     </div>
                     <div class="ar-text">${verse.text}</div>
-                    <div class="trans-text">${transText}</div>
+                    <div class="trans-text">${surahAr.transliteration} Verse ${verse.id}</div>
                     <div class="fr-text">${frenchText}</div>
                 </div>
             `;
@@ -59,7 +127,36 @@
         container.innerHTML = html;
     }
 
-    loadSurah();
+    function getGlobalNum(id, index) {
+        let count = 0;
+        for (let i = 0; i < id - 1; i++) {
+            count += quranData[i].verses.length;
+        }
+        return count + (index + 1);
+    }
+
+    function playAudio(num, btn) {
+        const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${num}.mp3`;
+
+        if (audioPlayer.src === url && !audioPlayer.paused) {
+            audioPlayer.pause();
+            btn.innerText = "▶ Écouter";
+        } else {
+            if (currentAudioBtn) currentAudioBtn.innerText = "▶ Écouter";
+            btn.innerText = "⌛";
+            audioPlayer.src = url;
+            audioPlayer.play().then(() => {
+                btn.innerText = "⏸ Pause";
+                currentAudioBtn = btn;
+            }).catch(() => {
+                alert("Erreur de connexion audio.");
+                btn.innerText = "▶ Écouter";
+            });
+        }
+        audioPlayer.onended = () => btn.innerText = "▶ Écouter";
+    }
+
+    window.onload = loadSurah;
 </script>
 </body>
 </html>
